@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Account Details</title>
+</head>
+<body>
+<h1>Account ID: <span th:text="${accountId}"></span></h1>
+<h2>Balance: <span th:text="${balance}"></span></h2>
+<form th:action="@{/account/{id}/deposit(id=${accountId})}" method="post">
+    <input type="number" name="amount" placeholder="Deposit Amount" required>
+    <button type="submit">Deposit</button>
+</form>
+<form th:action="@{/account/{id}/withdraw(id=${accountId})}" method="post">
+    <input type="number" name="amount" placeholder="Withdraw Amount" required>
+    <button type="submit">Withdraw</button>
+</form>
+</body>
+</html>

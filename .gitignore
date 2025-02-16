@@ -59,3 +59,4 @@ tmp/
 
 gradlew
 gradlew.bat
+/src/main/generated/
