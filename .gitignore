@@ -1,0 +1,61 @@
+# Compiled class files
+*.class
+
+# Log files
+logs/
+*.log
+*.out
+*.err
+
+# Gradle build files
+.gradle/
+build/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# VS Code
+.vscode/
+
+# MacOS
+.DS_Store
+
+# Linux
+*~
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Java
+*.jar
+*.war
+*.ear
+
+# Spring Boot specific
+spring.log
+
+# Environment files
+.env
+*.env
+
+# Temporary files
+tmp/
+
+gradlew
+gradlew.bat
