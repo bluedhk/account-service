@@ -1,0 +1,27 @@
+### createAccount
+POST http://localhost:8080/api/account/create?
+    accountNumber={{$random.alphanumeric(8)}}
+
+### findAccount
+@id = 1
+GET http://localhost:8080/api/account/{{id}}/balance
+
+### deposit
+POST http://localhost:8080/api/account/{{id}}/deposit
+Content-Type: application/json
+
+{
+  "id": {{id}},
+  "balanceType": "STANDARD",
+  "amount": 1000
+}
+
+### withdraw
+POST http://localhost:8080/api/account/{{id}}/withdraw
+Content-Type: application/json
+
+{
+  "id": {{id}},
+  "balanceType": "STANDARD",
+  "amount": 200
+}

@@ -1,4 +1,4 @@
-package com.example.accountservice.config;
+package com.example.accountservice.common.config;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
