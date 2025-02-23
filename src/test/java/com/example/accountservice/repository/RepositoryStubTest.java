@@ -2,10 +2,13 @@ package com.example.accountservice.repository;
 
 import com.example.accountservice.model.Account;
 import com.example.accountservice.model.Balance;
+import com.example.accountservice.service.enums.BalanceType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Optional;
 
 import static org.assertj.core.api.BDDAssertions.then;
@@ -24,7 +27,8 @@ class RepositoryStubTest {
     @Test
     void shouldSaveAndRetrieveAccount() {
         // Given
-        Account account = new Account(null, "123456", null, null, null);
+        LocalDateTime now = LocalDateTime.now();
+        Account account = Account.ofAll(null, "123456", new ArrayList<>(), now, now);
 
         // When
         Account savedAccount = accountRepositoryStub.save(account);
@@ -40,9 +44,8 @@ class RepositoryStubTest {
     @Test
     void shouldSaveAndRetrieveBalance() {
         // Given
-        Account account = new Account(1L, "123456", null, null, null);
-        Balance balance = new Balance(null, account, BigDecimal.valueOf(1000));
-        account.setBalance(balance);
+        Account account = Account.ofAll(1L, "123456", new ArrayList<>(), null, null);
+        Balance balance = Balance.ofAll(null, BalanceType.STANDARD.name(), account, BigDecimal.valueOf(1000));
 
         // When
         Balance savedBalance = balanceRepositoryStub.save(balance);

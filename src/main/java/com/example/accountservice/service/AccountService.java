@@ -1,60 +1,75 @@
 package com.example.accountservice.service;
 
-import com.example.accountservice.model.Account;
-import com.example.accountservice.model.Balance;
-import com.example.accountservice.repository.AccountRepositoryStub;
-import com.example.accountservice.repository.BalanceRepositoryStub;
-import lombok.RequiredArgsConstructor;
+import com.example.accountservice.common.exception.AccountServiceException;
+import com.example.accountservice.model.command.AccountCommandService;
+import com.example.accountservice.model.query.AccountQueryService;
+import com.example.accountservice.service.vo.AccountDto;
+import com.example.accountservice.service.vo.BalanceDto;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.util.Optional;
+import java.time.LocalDateTime;
 
 @Service
-@RequiredArgsConstructor
 public class AccountService {
-    private final AccountRepositoryStub accountRepository;
-    private final BalanceRepositoryStub balanceRepository;
+    private final AccountQueryService accountQueryService;
+    private final AccountCommandService accountCommandService;
 
-    public Optional<Balance> getAccountBalance(Long accountId) {
-        return accountRepository.findById(accountId).flatMap(balanceRepository::findByAccount);
+    public AccountService(AccountQueryService accountQueryService, AccountCommandService accountCommandService) {
+        this.accountQueryService = accountQueryService;
+        this.accountCommandService = accountCommandService;
     }
 
-    @Transactional
-    public Account createAccount(String accountNumber) {
-        Account account = new Account(null, accountNumber, null, null, null);
-        Balance balance = new Balance(null, account, BigDecimal.ZERO);
-        account.setBalance(balance);
-        return accountRepository.save(account);
+    public AccountDto getAccountBalance(Long accountId) {
+        return accountQueryService.findById(accountId);
     }
 
-    @Transactional
-    public Balance deposit(Long accountId, BigDecimal amount) {
-        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Deposit amount must be greater than zero.");
-        }
-        Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new IllegalArgumentException("Account not found."));
-        Balance balance = balanceRepository.findByAccount(account)
-                .orElse(new Balance(null, account, BigDecimal.ZERO));
-        balance.setAmount(balance.getAmount().add(amount));
-        return balanceRepository.save(balance);
+    public AccountDto createAccount(final String accountNumber) {
+        final LocalDateTime requestedAt = LocalDateTime.now();
+        final AccountDto account = AccountDto.ofWithAccountNumberAndNoBalances(accountNumber, requestedAt);
+        return accountCommandService.createAccount(account);
     }
 
-    @Transactional
-    public Balance withdraw(Long accountId, BigDecimal amount) {
-        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Withdraw amount must be greater than zero.");
+    public AccountDto deposit(Long accountId, BalanceDto balanceDto) {
+        validateDepositAmount(balanceDto);
+        return processDeposit(accountId, balanceDto);
+    }
+
+    private AccountDto processDeposit(Long accountId, BalanceDto balanceDto) {
+        final AccountDto accountDto = findAccountIfNotExistsRaiseException(accountId);
+        accountDto.deposit(balanceDto);
+        return accountCommandService.deposit(accountDto);
+    }
+
+    private static void validateDepositAmount(BalanceDto balanceDto) {
+        final boolean canDeposit = balanceDto.canDeposit();
+        if (!canDeposit) {
+            throw new AccountServiceException("Deposit amount must be greater than zero.");
         }
-        Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new IllegalArgumentException("Account not found."));
-        Balance balance = balanceRepository.findByAccount(account)
-                .orElseThrow(() -> new IllegalArgumentException("Balance not found."));
-        if (balance.getAmount().compareTo(amount) < 0) {
-            throw new IllegalArgumentException("Insufficient balance.");
+    }
+
+    private AccountDto findAccountIfNotExistsRaiseException(Long accountId) {
+        final AccountDto accountDto = accountQueryService.findById(accountId);
+        if (accountDto == null) {
+            throw new AccountServiceException("Account not found");
         }
-        balance.setAmount(balance.getAmount().subtract(amount));
-        return balanceRepository.save(balance);
+        return accountDto;
+    }
+
+    public AccountDto withdraw(Long accountId, BalanceDto balanceDto) {
+        final AccountDto accountDto = findAccountIfNotExistsRaiseException(accountId);
+        validateWithdrawAmount(balanceDto, accountDto);
+        return processWithdraw(balanceDto, accountDto);
+    }
+
+    private AccountDto processWithdraw(BalanceDto balanceDto, AccountDto accountDto) {
+        accountDto.withdraw(balanceDto);
+        return accountCommandService.withdraw(accountDto);
+    }
+
+    private void validateWithdrawAmount(BalanceDto balanceDto, AccountDto accountDto) {
+        final boolean canWithdraw = accountDto.canWithdraw(balanceDto);
+        if (!canWithdraw) {
+            throw new AccountServiceException("Withdraw amount must be greater than zero.");
+        }
     }
 }
